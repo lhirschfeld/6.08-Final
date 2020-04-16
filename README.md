@@ -4,7 +4,7 @@ Install prerequisites with `python3 -m pip install -r requirements.txt`.  If you
 
 ### Web API
 
-The API (in `api.py`) is written in FastAPI using SQLAlchemy to talk to SQLite.  See [this page](https://fastapi.tiangolo.com/advanced/async-sql-databases/) for details.  To run the API, do `python3 -m uvicorn api:app --reload`.
+The API (in `api.py`) is written in FastAPI using SQLAlchemy to talk to SQLite.  See [this page](https://fastapi.tiangolo.com/advanced/async-sql-databases/) for details.  To run the API, from `webserver` run `python3 -m uvicorn api:app --reload`.
 
 ### Command Line Interace
 
