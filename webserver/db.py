@@ -23,7 +23,7 @@ jobs = sqlalchemy.Table(
                       server_default=sqlalchemy.sql.func.now()),
     sqlalchemy.Column('status',
                       sqlalchemy.String,
-                      server_default=STATUS.QUEUED),
+                      server_default=STATUS['QUEUED']),
     sqlalchemy.Column('container', sqlalchemy.String),
     sqlalchemy.Column('mount',
                       sqlalchemy.String,

@@ -39,7 +39,7 @@ async def shutdown():
 
 @app.get('/queue/', response_model=List[Job])
 async def read_all_queues():
-    query = jobs.select().where(jobs.c.status == STATUS.QUEUED) \
+    query = jobs.select().where(jobs.c.status == STATUS['QUEUED']) \
                          .order_by(jobs.c.timestamp.asc())
 
     return await database.fetch_all(query)
@@ -47,7 +47,7 @@ async def read_all_queues():
 
 @app.get('/queue/{robot_name}', response_model=List[Job])
 async def read_robot_queue(robot_name: str):
-    query = jobs.select().where(jobs.c.status == STATUS.QUEUED) \
+    query = jobs.select().where(jobs.c.status == STATUS['QUEUED']) \
                          .where(jobs.c.robot == robot_name) \
                          .order_by(jobs.c.timestamp.asc())
 
@@ -56,7 +56,7 @@ async def read_robot_queue(robot_name: str):
 
 @app.get('/history/', response_model=List[Job])
 async def read_all_histories():
-    query = jobs.select().where(jobs.c.status != STATUS.QUEUED) \
+    query = jobs.select().where(jobs.c.status != STATUS['QUEUED']) \
                          .order_by(jobs.c.timestamp.desc())
 
     return await database.fetch_all(query)
@@ -64,7 +64,7 @@ async def read_all_histories():
 
 @app.get('/history/{robot_name}', response_model=List[Job])
 async def read_robot_history(robot_name: str):
-    query = jobs.select().where(jobs.c.status != STATUS.QUEUED) \
+    query = jobs.select().where(jobs.c.status != STATUS['QUEUED']) \
                          .where(jobs.c.robot == robot_name) \
                          .order_by(jobs.c.timestamp.desc())
 
@@ -116,7 +116,7 @@ async def delete_job(job_id: int):
 
 @app.post('/pop/{robot_name}', response_model=Job)
 async def pop(robot_name: str):
-    query = jobs.select().where(jobs.c.status == STATUS.QUEUED) \
+    query = jobs.select().where(jobs.c.status == STATUS['QUEUED']) \
                          .where(jobs.c.robot == robot_name) \
                          .order_by(jobs.c.timestamp.asc())
 
