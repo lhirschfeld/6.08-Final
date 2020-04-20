@@ -14,7 +14,6 @@ class JobIn(BaseModel):
     container: str
     mount: str
     robot: str
-    output_zip_path: str
 
 
 class Job(BaseModel):
@@ -24,7 +23,6 @@ class Job(BaseModel):
     container: str
     mount: str
     robot: str
-    output_zip_path: str
 
 
 @app.on_event('startup')
@@ -75,12 +73,10 @@ async def read_robot_history(robot_name: str):
 async def create_job(container: str,
                      mount: str,
                      robot: str,
-                     output_zip_path: str,
                      code_zip: UploadFile = File(...)):
     query = jobs.insert(None).values(container=container,
                                      mount=mount,
-                                     robot=robot,
-                                     output_zip_path=output_zip_path)
+                                     robot=robot)
 
     last_job_id = await database.execute(query)
 

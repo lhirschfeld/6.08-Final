@@ -29,7 +29,6 @@ jobs = sqlalchemy.Table(
                       sqlalchemy.String,
                       server_default=DEFAULT_MOUNT),
     sqlalchemy.Column('robot', sqlalchemy.String, server_default=''),
-    sqlalchemy.Column('output_zip_path', sqlalchemy.String, server_default=''),
 
 )
 
