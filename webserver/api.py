@@ -10,12 +10,6 @@ from db import database, jobs, STATUS
 app = FastAPI()
 
 
-class JobIn(BaseModel):
-    container: str
-    mount: str
-    robot: str
-
-
 class Job(BaseModel):
     id: int
     timestamp: datetime
