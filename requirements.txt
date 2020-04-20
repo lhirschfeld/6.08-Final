@@ -1,3 +1,4 @@
+aiofiles
 fastapi
 uvicorn
 typer
@@ -5,3 +6,4 @@ sqlalchemy
 databases[sqlite]
 gym
 pyserial
+python-multipart
