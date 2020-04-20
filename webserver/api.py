@@ -125,6 +125,6 @@ async def pop(robot_name: str):
     if job is None:
         return None
 
-    updated_job = await update_job(job.id, STATUS.RUNNING)
+    updated_job = await update_job(job.id, STATUS['RUNNING'])
 
     return updated_job
