@@ -62,9 +62,7 @@ def job_create(container: str,
     set_host(url)
     endpoint = url + '/job/'
     f= open(code_zip,"rb")
-    code  = f.read()
-
-    r = requests.post(endpoint, data= {'container': container, 'mount': mount, 'robot': robot, 'code_zip': f} )
+    r = requests.post(endpoint, params = {'container': container, 'mount': mount, 'robot': robot}, files = {'code_zip': f})
     typer.echo(r.text)
     f.close()
 
