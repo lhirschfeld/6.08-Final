@@ -21,13 +21,18 @@ void TC5_Handler() {                // gets called with FPID frequency
     if ((y - y_1) < -180.0) wrap_count += 1;      //Check if we've rotated more than a full revolution (have we "wrapped" around from 359 degrees to 0 or ffrom 0 to 359?)
     else if ((y - y_1) > 180.0) wrap_count -= 1;
 
-    yw = (y + (360.0 * wrap_count));              //yw is the wrapped angle (can exceed one revolution)
+    yw = (y + (360.0 * wrap_count)) + wrap_homing;              //yw is the wrapped angle (can exceed one revolution)
 
 
     if (mode == 'h') {                            //choose control algorithm based on mode
       hybridControl();                            // hybrid control is still under development...
     }
     else {
+      
+      //filtered velocity called "DTerm" because it is similar to derivative action in position loop
+      v = vLPFa*v +  vLPFb*(yw-yw_1);
+      quadEncoderVelocity = qLPFa*quadEncoderVelocity + qLPFb*(quadEncoderTicks-quadEncoderTicks_1);
+      
       switch (mode) {
         case 'x':         // position control                        
             e = (r - yw);
@@ -44,7 +49,6 @@ void TC5_Handler() {                // gets called with FPID frequency
             break;
             
         case 'v':         // velocity controlr
-          v = vLPFa*v +  vLPFb*(yw-yw_1);     //filtered velocity called "DTerm" because it is similar to derivative action in position loop
 
           e = (r - v);   //error in degrees per rpm (sample frequency in Hz * (60 seconds/min) / (360 degrees/rev) )
 
@@ -97,6 +101,8 @@ void TC5_Handler() {                // gets called with FPID frequency
     u_2 = u_1;
     u_1 = u;
     yw_1 = yw;
+    quadEncoderTicks_1 = quadEncoderTicks;
+    
     //y_1 = y;
     
     if (print_yw ==  true){       //for step resonse... still under development
@@ -113,11 +119,3 @@ void TC5_Handler() {                // gets called with FPID frequency
 
 
 }
-
-
-
-
-
-
-
-

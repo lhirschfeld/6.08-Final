@@ -6,6 +6,12 @@
 #define firmware_version "0.1.5"    //firmware version
 #define identifier "x"              // change this to help keep track of multiple mechaduinos (printed on startup)
 
+#define STATE_UPDATE_PERIOD 20 // ms
+#define HOMING_STOP_EFFORT  100
+#define HOMING_SPEED  400
+#define RAIL_TRAVEL 5120 // in encoder ticks i think
+
+
 //----Current Parameters-----
 
 extern volatile float Ts;
@@ -29,7 +35,8 @@ extern volatile float pLPFa;
 extern volatile float pLPFb;
 extern volatile float vLPFa;
 extern volatile float vLPFb;
-
+extern volatile float qLPFa;
+extern volatile float qLPFb;
 
 extern const int spr; //  200 steps per revolution
 extern const float aps; // angle per step
@@ -41,7 +48,6 @@ extern volatile float PA;  //
 extern const float iMAX;
 extern const float rSense;
 extern volatile int uMAX;
-
 
 extern const int sin_1[];
 
@@ -59,6 +65,10 @@ extern const int sin_1[];
 #define step_pin 1
 #define dir_pin 0
 #define enable_pin 2
+
+#define QUAD_A 0
+#define QUAD_B 1
+#define QUAD_Z 2
 
 //for faster digitalWrite:
 #define IN_1_HIGH() (REG_PORT_OUTSET0 = PORT_PA06)

@@ -8,6 +8,20 @@
 	
 	void setupSPI();                  //initializes SPI
 
+  void setupQuadrature();
+
+  void quadInterruptA();
+
+  void quadInterruptB();
+
+  void quadInterruptZ();
+
+  int parseQuadEncoder();
+
+  void homeCart();
+
+  void serialCheckGym();
+
   void configureStepDir();          //configure step/dir interface
   
   void configureEnablePin();        //configure enable pin 
@@ -67,10 +81,3 @@
   void moveAbs(float pos_final,int vel_max, int accel);     // Generates trapezoidal motion profile for closed loop position mode
   
 #endif
-
-
-
-
-
-
-

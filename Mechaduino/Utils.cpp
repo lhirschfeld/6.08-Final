@@ -11,6 +11,10 @@
 #include "State.h"
 #include "analogFastWrite.h"
 
+inline int digitalReadFast(int pin) {
+   return !!(PORT->Group[g_APinDescription[pin].ulPort].IN.reg & (1ul << g_APinDescription[pin].ulPin));
+}
+
 void setupPins() {
 
   pinMode(VREF_2, OUTPUT);
@@ -51,6 +55,63 @@ void setupSPI() {
   delay(1000);
   SPI.beginTransaction(settingsA);
 
+}
+
+void setupQuadrature() {
+  pinMode(QUAD_A, INPUT);
+  pinMode(QUAD_B, INPUT);
+  pinMode(QUAD_Z, INPUT);
+
+  // set to pullup (could also INPUT_PULLUP?)
+  digitalWrite(QUAD_A, LOW);
+  digitalWrite(QUAD_B, LOW);
+  digitalWrite(QUAD_Z, LOW);
+  
+  attachInterrupt(QUAD_A, quadInterruptA, CHANGE);
+  attachInterrupt(QUAD_B, quadInterruptB, CHANGE);
+  attachInterrupt(QUAD_Z, quadInterruptZ, RISING);
+}
+
+void quadInterruptA() {
+  quadEncoderBSet = digitalReadFast(QUAD_B);
+  quadEncoderASet = digitalReadFast(QUAD_A);
+
+  quadEncoderTicks += parseQuadEncoder();
+
+  quadEncoderAPrev = quadEncoderASet;
+  quadEncoderBPrev = quadEncoderBSet;
+}
+
+void quadInterruptB() {
+  quadEncoderBSet = digitalReadFast(QUAD_B);
+  quadEncoderASet = digitalReadFast(QUAD_A);
+
+  quadEncoderTicks += parseQuadEncoder();
+
+  quadEncoderAPrev = quadEncoderASet;
+  quadEncoderBPrev = quadEncoderBSet;
+}
+
+
+void quadInterruptZ() {
+  // Reset positioning
+  if (quadHoming) quadEncoderTicks = 0;
+}
+
+int parseQuadEncoder() {
+  if (quadEncoderAPrev && quadEncoderBPrev) {
+    if (!quadEncoderASet && quadEncoderBSet) return 1;
+    if (quadEncoderASet && !quadEncoderBSet) return -1;
+  } else if (!quadEncoderAPrev && quadEncoderBPrev) {
+    if(!quadEncoderASet && !quadEncoderBSet) return 1;
+    if(quadEncoderASet && quadEncoderBSet) return -1;
+  } else if (!quadEncoderAPrev && !quadEncoderBPrev) {
+    if(quadEncoderASet && !quadEncoderBSet) return 1;
+    if(!quadEncoderASet && quadEncoderBSet) return -1;
+  } else if (quadEncoderAPrev && !quadEncoderBPrev) {
+    if(quadEncoderASet && quadEncoderBSet) return 1;
+    if(!quadEncoderASet && !quadEncoderBSet) return -1;
+  }
 }
 
 void configureStepDir() {
@@ -393,11 +454,67 @@ float read_angle()
 }
 
 
-void serialCheck() {        //Monitors serial for commands.  Must be called in routinely in loop for serial interface to work.
+void serialCheckGym() {
+  if (millis() - STATE_UPDATE_PERIOD >= lastStateUpdate) {
+      lastStateUpdate = millis();
+
+
+      String state = String(yw - RAIL_TRAVEL/2) + String(" ") + String(v) + String(" ") + String(quadEncoderTicks) + String(" ") + String(quadEncoderVelocity);
+      SerialUSB.println(state);
+  }
+  
+  if (SerialUSB.available()) {
+    long start = millis();
+    String s = SerialUSB.readStringUntil('\r');
+
+    // We have the following commands:
+    // c:h homes
+    // float: motor command
+    if (s.length() == 2 && s.charAt(0) == 'c')  {
+      
+      if (s.charAt(1) == 'h') homeCart();
+      
+      else if (s.charAt(1) == 'q') {
+        // Enable quad homing.
+        quadHoming = true;
+      }
+
+      else if (s.charAt(1) == 'd') {
+        // Disable quad homing.
+        quadHoming = false;
+      }
+      
+    }
+
+    else r = s.toFloat();
+
+    SerialUSB.println(millis()-start);
+  }
+}
+
+void homeCart() {  
+  char old_mode = mode;
+  float old_r   = r;
+  
+  mode = 'v';
+  r = -HOMING_SPEED;
+  while (U < HOMING_STOP_EFFORT) delay(20);
+
+  wrap_homing += -yw;
+  mode = 'x';
+  r    = RAIL_TRAVEL/2;
+
+  delay(3000); // 3 seconds should be enough to get there
+
+  mode = old_mode;
+  r    = old_r;
+}
+
+void serialCheck() {
 
   if (SerialUSB.available()) {
 
-    char inChar = (char)SerialUSB.read();
+    char inChar = (char) SerialUSB.read();
 
     switch (inChar) {
 

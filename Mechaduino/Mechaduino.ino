@@ -46,6 +46,7 @@
 #include "State.h"
 #include "analogFastWrite.h"
 
+
 //////////////////////////////////////
 /////////////////SETUP////////////////
 //////////////////////////////////////
@@ -62,19 +63,16 @@ void setup()        // This code runs once at startup
   delay(3000);                      // This delay seems to make it easier to establish a connection when the Mechaduino is configured to start in closed loop mode.  
   serialMenu();                     // Prints menu to serial monitor
   setupSPI();                       // Sets up SPI for communicating with encoder
+  setupQuadrature();                // Set up quadrature encoder 
   digitalWrite(ledPin,LOW);         // turn LED off 
   
   // spot check some of the lookup table to decide if it has been filled in
   if (lookup[0] == 0 && lookup[128] == 0 && lookup[1024] == 0)
     SerialUSB.println("WARNING: Lookup table is empty! Run calibration");
 
-  // Uncomment the below lines as needed for your application.
-  // Leave commented for initial calibration and tuning.
   
-  //    configureStepDir();           // Configures setpoint to be controlled by step/dir interface
-  //    configureEnablePin();         // Active low, for use wath RAMPS 1.4 or similar
-  //     enableTCInterrupts();         // uncomment this line to start in closed loop 
-  //    mode = 'x';                   // start in position mode
+  enableTCInterrupts(); // start in closed loop mode
+  mode = 't'; // start in torque mode
 
 }
   
@@ -85,11 +83,9 @@ void setup()        // This code runs once at startup
 //////////////////////////////////////
 
 
-void loop()                 // main loop
-{
+void loop() {
 
-  serialCheck();              //must have this execute in loop for serial commands to function
+  serialCheckGym();              //must have this execute in loop for serial commands to function
 
-  //r=0.1125*step_count;      //Don't use this anymore. Step interrupts enabled above by "configureStepDir()", adjust step size ("stepangle")in parameters.cpp
 
 }

@@ -7,7 +7,6 @@
 
 //----Current Parameters-----
 
-
 volatile float Fs = 6500.0000000000;  //Sample frequency in Hz
  
 volatile float pKp = 15.0000000000;      //position mode PID vallues.
@@ -19,6 +18,10 @@ volatile float vKp = 0.0010000000;      //velocity mode PID vallues.
 volatile float vKi = 0.0010000000;
 volatile float vKd = 0.0000000000;
 volatile float vLPF = 100.0000000000;
+
+volatile float qLPF = 100.0000000000;  // low pass filter for quadrature encoder
+volatile float qLPFa = exp(qLPF*-2*3.14159/Fs); // z = e^st pole mapping
+volatile float qLPFb = (1.0-qLPFa)* Fs * 0.16666667;
 
 //This is the encoder lookup table (created by calibration routine)
 

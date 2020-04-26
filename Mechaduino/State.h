@@ -31,6 +31,21 @@ extern volatile float y_1;
 extern volatile long step_count;  //For step/dir interrupt
 extern int stepNumber; // step index for cal routine
 
+// Added for quadrature:
+extern volatile bool quadEncoderASet;
+extern volatile bool quadEncoderBSet;
+extern volatile bool quadEncoderAPrev;
+extern volatile bool quadEncoderBPrev;
+extern volatile long quadEncoderTicks;
+extern volatile long quadEncoderTicks_1;
+extern volatile float quadEncoderVelocity;
+extern volatile bool quadHoming;
+
+// Added for serial communication
+extern volatile long lastStateUpdate;
+
+// Used for homing
+extern volatile float wrap_homing;
 
 extern volatile float ITerm;
 extern volatile float DTerm;
@@ -39,11 +54,3 @@ extern int dir;
 
 extern bool print_yw;     //for step response, under development...
 #endif
-
-
-
-
-
-
-
-

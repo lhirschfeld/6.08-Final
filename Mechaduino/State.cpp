@@ -33,16 +33,25 @@ int stepNumber = 0; // open loop step number (used by 's' and for cal routine)
 volatile float ITerm;
 volatile float DTerm;
 
+// Added for quadrature encoder
+volatile bool quadEncoderASet;
+volatile bool quadEncoderBSet;
+volatile bool quadEncoderAPrev;
+volatile bool quadEncoderBPrev;
+volatile long quadEncoderTicks = 0;
+volatile long quadEncoderTicks_1 = 0;
+volatile float quadEncoderVelocity = 0;
+volatile bool quadHoming = false;
+
+
+// Added for serial communication
+volatile long lastStateUpdate;
+
+// Used for homing
+volatile float wrap_homing = 0;
+
 
 char mode;
 volatile bool dir = false;  
 
 bool print_yw = false;      //for step response, under development...
-
-
-
-
-
-
-
-
