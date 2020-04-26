@@ -1,19 +1,13 @@
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import FileResponse
+import os
 from pydantic import BaseModel
 from typing import List
 
 from db import database, jobs, STATUS
 
 app = FastAPI()
-
-
-class JobIn(BaseModel):
-    container: str
-    mount: str
-    robot: str
-    code_zip: str
-    output_zip: str
 
 
 class Job(BaseModel):
@@ -23,8 +17,6 @@ class Job(BaseModel):
     container: str
     mount: str
     robot: str
-    code_zip: str
-    output_zip: str
 
 
 @app.on_event('startup')
@@ -72,14 +64,20 @@ async def read_robot_history(robot_name: str):
 
 
 @app.post('/job/', response_model=Job)
-async def create_job(job: JobIn):
-    query = jobs.insert(None).values(container=job.container,
-                                     mount=job.mount,
-                                     robot=job.robot,
-                                     code_zip=job.code_zip,
-                                     output_zip=job.output_zip)
+async def create_job(container: str,
+                     mount: str,
+                     robot: str,
+                     code_zip: UploadFile = File(...)):
+    query = jobs.insert(None).values(container=container,
+                                     mount=mount,
+                                     robot=robot)
 
     last_job_id = await database.execute(query)
+
+    with open(f'code_zips/{last_job_id}.zip', 'wb+') as f:
+        output = await code_zip.read()
+        f.write(output)
+
     new_query = jobs.select().where(jobs.c.id == last_job_id)
 
     return await database.fetch_one(new_query)
@@ -111,7 +109,24 @@ async def delete_job(job_id: int):
     new_query = jobs.delete().where(jobs.c.id == job_id)
     await database.execute(new_query)
 
+    path = f'code_zips/{job_id}.zip'
+    if os.path.exists(path):
+        os.remove(path)
+
     return job
+
+
+@app.get('/code/{job_id}')
+async def read_code(job_id: int):
+    query = jobs.select(jobs.c.id == job_id)
+    job = await database.fetch_one(query)
+
+    path = f'code_zips/{job_id}.zip'
+
+    if job is None or not os.path.exists(path):
+        return None
+
+    return FileResponse(path, filename=f'{job_id}.zip')
 
 
 @app.post('/pop/{robot_name}', response_model=Job)
@@ -125,6 +140,6 @@ async def pop(robot_name: str):
     if job is None:
         return None
 
-    updated_job = await update_job(job.id, STATUS.RUNNING)
+    updated_job = await update_job(job.id, STATUS['RUNNING'])
 
     return updated_job
