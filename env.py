@@ -1,7 +1,6 @@
 import serial, sys, glob, gym, time, os
 import serial.tools.list_ports
 import numpy as np
-from gym.envs.classic_control import rendering
 
 PORT_NAME             = '/dev/ttyACM1'
 MOUNT_OFFSET          = 152
@@ -80,6 +79,8 @@ class HillCartpole(HillGym):
         self.timesteps = 0
     
     def make_visualizer(self, width=640, height=480):
+        from gym.envs.classic_control import rendering
+
         self.visualizer_width = width
         self.visualizer_height = height
 
