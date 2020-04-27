@@ -8,7 +8,7 @@ MOUNT_OFFSET          = 152
 RAIL_TRAVEL           = 5120
 ENCODER_TICKS_PER_REV = 4096
 TORQUE_SCALING        = 50
-ENV_FREQUENCY         = 1000/20
+HARDWARE_FREQUENCY    = 1000/20
 
 class HillGym(gym.Env):
     def _only_hardware(f):
@@ -44,6 +44,7 @@ class HillCartpole(HillGym):
             pass
         
         self.timesteps = 0
+        return self.get_observation()
     
     @HillGym._only_hardware
     def enable_quadrature_homing(self):
@@ -58,7 +59,7 @@ class HillCartpole(HillGym):
         self.ser.write("ch\r".encode())
     
     @HillGym._only_hardware
-    def torque(self, torque):
+    def torque(self, t):
         self.ser.write((str(t)+'\r').encode())
     
     @HillGym._only_hardware
@@ -76,9 +77,8 @@ class HillCartpole(HillGym):
     
     def step(self, action):
         action = np.clip(action, self.action_space.low, self.action_space.high)
-        
         if self.real:
-            self.torque(TORQUE_SCALING*action)
+            self.torque(TORQUE_SCALING*action[0])
         else:
             # TODO: perform forward dynamics
             pass
@@ -91,7 +91,7 @@ class HillCartpole(HillGym):
         
         return obs, reward, done, {}
     
-    def is_done(obs):
+    def is_done(self,obs):
         pass
     
     def get_reward(self, obs, action):
@@ -101,7 +101,6 @@ class HillCartpole(HillGym):
         if self.real:
             q_cart, qd_cart, q_pole, qd_pole = self.read_state()
             
-            print(q_cart)
             return np.array([
                 2 * q_cart  / RAIL_TRAVEL,
                 2 * qd_cart / RAIL_TRAVEL,
@@ -123,7 +122,6 @@ class HillCartpole(HillGym):
         shape=(4,))
 
 
-env = HillCartpole()
-#env.reset()
-
-print(env.get_observation())
+if __name__ == "__main__":
+    env = HillCartpole()
+    env.step(0)
