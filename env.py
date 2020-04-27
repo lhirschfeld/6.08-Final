@@ -1,6 +1,5 @@
-import serial
-import gym
-import time
+import serial, sys, glob, gym, time, os
+import serial.tools.list_ports
 import numpy as np
 from gym.envs.classic_control import rendering
 
@@ -39,7 +38,6 @@ class HillGym(gym.Env):
         
         return guarded
 
-
 class HillCartpole(HillGym):
         
     def __init__(
@@ -55,12 +53,19 @@ class HillCartpole(HillGym):
         self.timestep_limit = timestep_limit
         
         try:
-            self.ser  = serial.Serial(PORT_NAME)
+            ports = serial.tools.list_ports.grep('arduino')
+            port = next(ports)
+            
+            self.ser  = serial.Serial(os.path.join('/dev',port.name), timeout=0)
             self.real = True
-        except serial.SerialException as e:
+        except (serial.SerialException, StopIteration) as e:            
             if self.verbose:
-                print("Can't find physical robot due to error:")
-                print(e)
+                if isinstance(e, StopIteration):
+                    print("Can't find Arduino COM port.")
+                else:
+                    print("Can't find physical robot due to error:")
+                    print(e)
+                
                 print("Running in simulation mode instead.")
             
             self.real     = False
@@ -142,6 +147,7 @@ class HillCartpole(HillGym):
         if self.real:
             self.enable_quadrature_homing()
             self.home()
+            self.ser.reset_input_buffer()
             self.get_observation() #  blocks until homing is complete
             self.disable_quadrature_homing()
             self.torque_mode()
@@ -206,14 +212,17 @@ class HillCartpole(HillGym):
     
     @HillGym._only_hardware
     def read_state(self):
-        self.ser.flushInput()
-        raw = self.ser.readline().decode().strip().split(' ')
-
-        if len(raw) != 4:
-            return self.read_state()
-
+        old_r = None
+        r = self.ser.readline().decode().strip().split(' ')
+        while len(r) != 4:
+            r = self.ser.readline().decode().strip().split(' ')
+        
+        while len(r) == 4:
+            old_r = r
+            r = self.ser.readline().decode().strip().split(' ')
+        
         try:
-            return [float(s) for s in raw]
+            return [float(s) for s in old_r]
         except:
             return self.read_state()
     
