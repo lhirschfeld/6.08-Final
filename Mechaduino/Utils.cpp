@@ -467,9 +467,6 @@ void serialCheckGym() {
     long start = millis();
     String s = SerialUSB.readStringUntil('\r');
 
-    // We have the following commands:
-    // c:h homes
-    // float: motor command
     if (s.length() == 2 && s.charAt(0) == 'c')  {
       
       if (s.charAt(1) == 'h') homeCart();
@@ -482,6 +479,16 @@ void serialCheckGym() {
       else if (s.charAt(1) == 'd') {
         // Disable quad homing.
         quadHoming = false;
+      }
+
+      else if (s.charAt(1) == 't') {
+        // Switch to torque mode
+        mode = 't';
+      }
+
+      else if (s.charAt(1) == 'v') {
+        // Switch to velocity mode
+        mode = 'v';
       }
       
     }
