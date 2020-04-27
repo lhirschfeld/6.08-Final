@@ -25,6 +25,8 @@ jobs = sqlalchemy.Table(
                       sqlalchemy.String,
                       server_default=STATUS['QUEUED']),
     sqlalchemy.Column('container', sqlalchemy.String),
+    sqlalchemy.Column('run_command', sqlalchemy.String),
+    sqlalchemy.Column('logs', sqlalchemy.String, server_default=''),
     sqlalchemy.Column('mount',
                       sqlalchemy.String,
                       server_default=DEFAULT_MOUNT),

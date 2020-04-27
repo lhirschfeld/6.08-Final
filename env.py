@@ -22,11 +22,16 @@ class HillGym(gym.Env):
 
 class HillCartpole(HillGym):
         
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+        
         try:
             self.ser  = serial.Serial(PORT_NAME)
             self.real = True
-        except serial.SerialException:
+        except serial.SerialException as e:
+            if self.verbose:
+                print(e)
+            
             self.real = False
             
             # TODO: set up simulation variables
@@ -124,4 +129,4 @@ class HillCartpole(HillGym):
 
 if __name__ == "__main__":
     env = HillCartpole()
-    env.step(0)
+    env.reset()

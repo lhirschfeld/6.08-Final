@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from pathlib import Path
 import os
+import daemon
 
 HOST_FILE = os.path.join(Path.home(),".the_hill/host.txt")
 
@@ -38,25 +39,22 @@ def history(robot_name: str = typer.Argument(None),
     r = requests.get(endpoint)
     typer.echo(r.text)
 
-
-@app.command()
-def pop(robot_name: str, 
-        url: str = typer.Option(url_name, prompt = True)): 
-    set_host(url)
-    endpoint = url + '/pop/' + robot_name
-    r = requests.post(endpoint)
-    typer.echo(r.text)
-
 @job_app.command("create")
 def job_create(container: str,
         mount: str,
         robot: str,
         code_zip: str, 
+        run_command: str,
         url: str = typer.Option(url_name, prompt = True)):
     set_host(url)
     endpoint = url + '/job/'
     f= open(code_zip,"rb")
-    r = requests.post(endpoint, params = {'container': container, 'mount': mount, 'robot': robot}, files = {'code_zip': f})
+    r = requests.post(endpoint, params = {
+        'container': container,
+        'mount': mount,
+        'robot': robot,
+        'run_command': run_command
+    }, files = {'code_zip': f})
     typer.echo(r.text)
     f.close()
 
@@ -83,15 +81,14 @@ def job_update(job_id : int,
     typer.echo(r.text)
 
 
-@job_app.command("delete") 
-def job_delete(job_id : int, 
+@app.command("daemon") 
+def run_daemon(robot_name : str, 
                 url: str = typer.Option(url_name, prompt = True)):
+    
     set_host(url)
-    endpoint = url + '/job/'+ str(job_id)
-    r = requests.delete(endpoint)
-    typer.echo(r.text)
+    daemon.run(robot_name, url)
 
-
+    
 @app.command()
 def sethost(host_url: str):
     set_host(host_url)

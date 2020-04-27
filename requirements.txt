@@ -7,3 +7,4 @@ databases[sqlite]
 gym
 pyserial
 python-multipart
+docker
