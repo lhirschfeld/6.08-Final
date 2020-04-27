@@ -502,6 +502,10 @@ void serialCheckGym() {
 void homeCart() {  
   char old_mode = mode;
   float old_r   = r;
+
+  mode = 't'; // calm down the system
+  r = 0;
+  delay(500);
   
   mode = 'v';
   r = -HOMING_SPEED;
