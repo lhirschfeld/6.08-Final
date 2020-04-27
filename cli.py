@@ -6,8 +6,11 @@ from pydantic import BaseModel
 from pathlib import Path
 import os
 import daemon
-
+from zipfile import ZipFile
+import pandas
+from pandas.io.json import json_normalize
 HOST_FILE = os.path.join(Path.home(),".the_hill/host.txt")
+CODE_FILE = os.path.join(Path.home(), ".the_hill/code.zip")
 
 app = typer.Typer()
 url_name = None
@@ -18,15 +21,33 @@ if os.path.exists(HOST_FILE):
     f = open(HOST_FILE, "r")
     url_name = f.readlines()[0]
 
+def json_print(js, hide = True):    
+    out = json_normalize(js)
+    if out.empty:
+        empty = {'id': '', 
+                'timestamp': '',
+                'status': '',
+                'container':'',
+                'run_command': '',
+                'mount': '',
+                'robot': '',
+                'logs': ''}
+        out = json_normalize(empty)
+    out.set_index('id', inplace = True)
+    if hide:
+        out.drop(columns = ['logs'], inplace = True)
+    typer.echo(out)
+
+
 @app.command()
 def queue(robot_name: str = typer.Argument(None), 
             url: str = typer.Option(url_name, prompt = True)): 
     set_host(url)
-    endpoint = url + '/queue'
+    endpoint = url + '/queue/'
     if robot_name is not None:
         endpoint += robot_name
     r = requests.get(endpoint)
-    typer.echo(r.text)
+    json_print(r.json())
 
 
 @app.command()
@@ -37,7 +58,7 @@ def history(robot_name: str = typer.Argument(None),
     if robot_name is not None:
         endpoint += robot_name
     r = requests.get(endpoint)
-    typer.echo(r.text)
+    json_print(r.json())
 
 @job_app.command("create")
 def job_create(container: str,
@@ -48,19 +69,25 @@ def job_create(container: str,
         url: str = typer.Option(url_name, prompt = True)):
     set_host(url)
     endpoint = url + '/job/'
-    f= open(code_zip,"rb")
+    if os.path.isdir(code_zip):  
+        with ZipFile(CODE_FILE, 'w') as f:
+           for folderName, subfolders, filenames in os.walk(code_zip):
+               for filename in filenames:
+                   filePath = os.path.join(folderName, filename)
+                   f.write(filePath)
+        f = open(CODE_FILE, "rb")
+    else :  
+        f= open(code_zip,"rb")
+
     r = requests.post(endpoint, params = {
         'container': container,
         'mount': mount,
         'robot': robot,
         'run_command': run_command
     }, files = {'code_zip': f})
-    typer.echo(r.text)
+    json_print(r.json())
     f.close()
 
-@app.command()
-def printurl():
-    typer.echo(url_name)
 
 @job_app.command("read") 
 def job_read(job_id : int, 
@@ -68,17 +95,30 @@ def job_read(job_id : int,
     set_host(url)
     endpoint = url + '/job/' + str(job_id)
     r = requests.get(endpoint)
-    typer.echo(r.text)
+    json_print(r.json(), False)
+    
+@job_app.command("delete") 
+def job_delete(job_id : int, 
+            url: str = typer.Option(url_name, prompt = True)):
+    endpoint = url + '/job/'+ str(job_id)
+    r = requests.delete(endpoint)
+    json_print(r.json())
 
 
 @job_app.command("update")
 def job_update(job_id : int, 
                 job_status: str, 
+                job_logs: str,
+                output_zip: str,
                 url: str = typer.Option(url_name, prompt = True)):
     set_host(url)
-    endpoint = url + '/job/' + str(job_id)    
-    r = requests.put(endpoint, params= {'job_id': job_id, 'job_status': job_status})
-    typer.echo(r.text)
+    endpoint = url + '/job/' + str(job_id) 
+    f= open(output_zip,"rb")   
+    r = requests.put(endpoint, 
+                params= {'job_id': job_id, 'job_status': job_status, 'job_logs': job_logs},
+                files = {'output_zip': f})
+    print(r.text)
+    json_print(r.json())
 
 
 @app.command("daemon") 
