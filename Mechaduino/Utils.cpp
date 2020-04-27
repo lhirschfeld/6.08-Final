@@ -458,9 +458,8 @@ void serialCheckGym() {
   if (millis() - STATE_UPDATE_PERIOD >= lastStateUpdate) {
       lastStateUpdate = millis();
 
-
-      String state = String(yw - RAIL_TRAVEL/2) + String(" ") + String(v) + String(" ") + String(quadEncoderTicks) + String(" ") + String(quadEncoderVelocity);
-      SerialUSB.println(state);
+      sprintf(message_buffer,"%f %f %ld %f\n", yw - RAIL_TRAVEL/2, v, quadEncoderTicks, quadEncoderVelocity);
+      SerialUSB.print(message_buffer);
   }
   
   if (SerialUSB.available()) {
@@ -494,8 +493,6 @@ void serialCheckGym() {
     }
 
     else r = s.toFloat();
-
-    SerialUSB.println(millis()-start);
   }
 }
 

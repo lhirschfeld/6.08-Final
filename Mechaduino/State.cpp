@@ -50,6 +50,7 @@ volatile long lastStateUpdate;
 // Used for homing
 volatile float wrap_homing = 0;
 
+char message_buffer[80];
 
 char mode;
 volatile bool dir = false;  

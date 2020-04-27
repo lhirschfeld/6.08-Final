@@ -108,7 +108,7 @@ void TC5_Handler() {                // gets called with FPID frequency
     if (print_yw ==  true){       //for step resonse... still under development
       print_counter += 1;  
       if (print_counter >= 5){    // print position every 5th loop (every time is too much data for plotter and may slow down control loop
-        SerialUSB.println(int(yw*1024));    //*1024 allows us to print ints instead of floats... may be faster
+        //SerialUSB.println(int(yw*1024));    //*1024 allows us to print ints instead of floats... may be faster
         print_counter = 0;
       }
     }

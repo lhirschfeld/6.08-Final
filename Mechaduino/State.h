@@ -43,6 +43,7 @@ extern volatile bool quadHoming;
 
 // Added for serial communication
 extern volatile long lastStateUpdate;
+extern char message_buffer[80];
 
 // Used for homing
 extern volatile float wrap_homing;
