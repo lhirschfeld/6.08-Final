@@ -2,7 +2,6 @@ import serial, sys, glob, gym, time, os
 import serial.tools.list_ports
 import numpy as np
 
-PORT_NAME             = '/dev/ttyACM1'
 MOUNT_OFFSET          = 152
 RAIL_TRAVEL           = 5120
 ENCODER_TICKS_PER_REV = 4096
@@ -45,6 +44,7 @@ class HillCartpole(HillGym):
         pole_mass = POLE_MASS,
         pole_length = POLE_LENGTH,
         timestep_limit = MAX_TIMESTEPS,
+        simulation=False,
         verbose=False
     ):
         self.viewer = None
@@ -52,6 +52,9 @@ class HillCartpole(HillGym):
         self.timestep_limit = timestep_limit
         
         try:
+            if simulation:
+                raise StopIteration
+            
             ports = serial.tools.list_ports.grep('arduino')
             port = next(ports)
             
@@ -59,13 +62,11 @@ class HillCartpole(HillGym):
             self.real = True
         except (serial.SerialException, StopIteration) as e:            
             if self.verbose:
-                if isinstance(e, StopIteration):
-                    print("Can't find Arduino COM port.")
-                else:
+                if isinstance(e, serial.SerialException):
                     print("Can't find physical robot due to error:")
                     print(e)
                 
-                print("Running in simulation mode instead.")
+                print("Running in simulation mode.")
             
             self.real     = False
             self.q_sim    = np.zeros(4)
@@ -73,7 +74,7 @@ class HillCartpole(HillGym):
             self.u_repeat = int(SIMULATION_FREQUENCY/HARDWARE_FREQUENCY)
             
             self.cart_mass = cart_mass
-            self.pole_mass = pole_mass,
+            self.pole_mass = pole_mass
             self.pole_length = pole_length
                 
         self.timesteps = 0
@@ -154,20 +155,22 @@ class HillCartpole(HillGym):
             self.torque_mode()
         
         else:
-            self.q = np.zeros(4)
+            self.q_sim = np.zeros(4)
         
         self.timesteps = 0
         return self.get_observation()
     
     @HillGym._only_simulation
-    def step_forward_dynamics(u):
-        x, xdot, theta, thetadot = q
+    def step_forward_dynamics(self, u):
+        x, xdot, theta, thetadot = self.q_sim
+        
+        theta = -1 * theta
         
         x_dotdot = (
             u + self.pole_mass * np.sin(theta) * (
                 self.pole_length * thetadot**2 + GRAVITY * np.cos(theta)
             )
-        ) / (self.cart_mass + self.pole_mass * bp.sin(theta)**2)
+        ) / (self.cart_mass + self.pole_mass * np.sin(theta)**2)
         
         theta_dotdot = (
             -u*np.cos(theta) -
@@ -178,10 +181,10 @@ class HillCartpole(HillGym):
             
         # Euler integration
         qdotdot = np.array([x_dotdot, theta_dotdot])
-        qdot_new = q[1::2] + qdotdot * self.dt
-        q_new = q[::2] + self.dt * qdot_new
+        qdot_new = self.q_sim[1::2] + qdotdot * self.dt_sim
+        q_new = self.q_sim[::2] + self.dt_sim * qdot_new
 
-        return np.stack((q_new, qdot_new)).T.flatten()
+        self.q_sim = np.stack((q_new, qdot_new)).T.flatten()
             
     @HillGym._only_hardware
     def enable_quadrature_homing(self):
@@ -276,7 +279,7 @@ class HillCartpole(HillGym):
             ])
         
         else:
-            return np.copy(self.q)
+            return np.copy(self.q_sim)
     
     @property
     def action_space(self):

@@ -43,6 +43,7 @@ def run_job(client, job, url):
         job['container'],
         job['run_command'],
         detach=True,
+        privileged=True,
         working_dir='/code',
         volumes={
             os.path.join(WORKSPACE_DIR,'code'):{'bind':'/code', 'mode': 'rw'},
