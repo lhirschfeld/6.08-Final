@@ -9,3 +9,4 @@ pyserial
 python-multipart
 docker
 pandas
+gunicorn
