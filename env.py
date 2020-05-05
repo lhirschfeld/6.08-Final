@@ -44,12 +44,16 @@ class HillCartpole(HillGym):
         pole_mass = POLE_MASS,
         pole_length = POLE_LENGTH,
         timestep_limit = MAX_TIMESTEPS,
+        windup_penalty = 0.1,
+        trig_observations=False,
         simulation=False,
         verbose=False
     ):
         self.viewer = None
         self.verbose = verbose
         self.timestep_limit = timestep_limit
+        self.trig_observations = trig_observations
+        self.windup_penalty = windup_penalty # penalty on sqrt of total angular distance
         
         try:
             if simulation:
@@ -226,7 +230,15 @@ class HillCartpole(HillGym):
             r = self.ser.readline().decode().strip().split(' ')
         
         try:
-            return [float(s) for s in old_r]
+            q_cart, qd_cart, q_pole, qd_pole = [float(s) for s in old_r]
+
+            return np.array([
+                2 * q_cart  / RAIL_TRAVEL,
+                2 * qd_cart / RAIL_TRAVEL,
+                2*np.pi*(q_pole - MOUNT_OFFSET)/(ENCODER_TICKS_PER_REV),
+                2*np.pi*qd_pole/ENCODER_TICKS_PER_REV
+            ])
+        
         except:
             return self.read_state()
     
@@ -239,8 +251,8 @@ class HillCartpole(HillGym):
             for _ in range(self.u_repeat):
                 self.step_forward_dynamics(action)
         
-        obs = self.get_observation()
-        reward = self.get_reward(obs, action)
+        obs, q = self.get_observation(include_raw=True)
+        reward = self.get_reward(q, action)
         done = self.is_done(obs)
         
         self.timesteps += 1
@@ -258,28 +270,38 @@ class HillCartpole(HillGym):
         
         return False
     
-    def get_reward(self, obs, action):
-        x, _, theta, _ = obs
+    def get_reward(self, state, action):
+        cos_theta = np.cos(state[2])
+        
         
         # Give reward from 0 to 1 for pole position.
         # Could also penalize x position, but will not for now.
-        reward = 0.5 * (1-np.cos(theta))
+        reward = 0.5 * (1-cos_theta)
         
+        # penalty on sqrt of total angular distance, meant to dissuade
+        # helicopter policies.
+        reward -= self.windup_penalty * np.sqrt(np.abs(state[2]))
+                
         return reward
     
-    def get_observation(self):
+    def get_observation(self, include_raw=False):
         if self.real:
-            q_cart, qd_cart, q_pole, qd_pole = self.read_state()
-            
-            return np.array([
-                2 * q_cart  / RAIL_TRAVEL,
-                2 * qd_cart / RAIL_TRAVEL,
-                2*np.pi*(q_pole - MOUNT_OFFSET)/(ENCODER_TICKS_PER_REV),
-                2*np.pi*qd_pole/ENCODER_TICKS_PER_REV
-            ])
-        
+            q_raw = self.read_state()
+                    
         else:
-            return np.copy(self.q_sim)
+            q_raw = np.copy(self.q_sim)
+        
+        if self.trig_observations:
+            q_proc = np.array([
+                q_raw[0], q_raw[1], np.cos(q_raw[2]), np.sin(q_raw[2]), q_raw[3]
+            ])
+        else:
+            q_proc = q_raw
+        
+        if include_raw:
+            return q_proc, q_raw
+        
+        return q_proc
     
     @property
     def action_space(self):
@@ -287,10 +309,16 @@ class HillCartpole(HillGym):
 
     @property
     def observation_space(self):
+        if self.trig_observations:
+            return gym.spaces.Box(
+                low= np.array([-1, -np.inf,-1, -1, -np.inf]),
+                high=np.array([1,   np.inf, 1,  1,  np.inf]),
+            )
+            
         return gym.spaces.Box(
-            low= [-1,-np.inf,-np.inf,-np.inf],
-            high=[1,  np.inf, np.inf, np.inf],
-        shape=(4,))
+            low= np.array([-1, -np.inf, -np.inf, -np.inf]),
+            high=np.array([1,   np.inf,  np.inf,  np.inf]),
+        )
 
 
 if __name__ == "__main__":
