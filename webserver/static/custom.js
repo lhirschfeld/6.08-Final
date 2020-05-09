@@ -120,7 +120,7 @@ const fill_robots = () => {
         robots_list.innerHTML = '';
         
         let li = createNode('li');
-        li.setAttribute('data-tags', 'active stale');
+        li.setAttribute('data-tags', 'active stale running');
         li.innerHTML = `
             <div class='uk-card uk-card-small uk-card-primary uk-card-body robot-button'>All Robots</div>
         `
