@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Hill | Overview</title>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <!-- UIkit CSS -->
+        <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/uikit@3.4.4/dist/css/uikit.min.css' />
+        <link rel='stylesheet' href='static/custom.css' />
+
+        <!-- UIkit JS -->
+        <script src='https://cdn.jsdelivr.net/npm/uikit@3.4.4/dist/js/uikit.min.js'></script>
+        <script src='https://cdn.jsdelivr.net/npm/uikit@3.4.4/dist/js/uikit-icons.min.js'></script>
+        <script src='static/config.js'></script>
+    </head>
+    <body>
+        <nav class='uk-navbar-container uk-navbar-transparent uk-background-primary uk-light' uk-navbar>
+            <div class='uk-navbar-left'>
+                <a href='/' class='uk-navbar-item uk-logo' id='navbar-title'>The Hill</a>
+            </div>
+            <div class='uk-navbar-right'>
+                <ul class='uk-navbar-nav'>
+                    <li><a href='/docs'>Docs</a></li>
+                    <li><a href='https://github.com/lhirschfeld/The-Hill'>Source</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class='uk-text-center' uk-grid>
+            <div class='uk-width-1-4'>
+                <div class='uk-margin-left uk-margin-right uk-margin-top' uk-filter='target: .js-filter'>
+
+                    <ul class='uk-subnav uk-subnav-pill'>
+                        <li uk-filter-control><a href='#'>All</a></li>
+                        <li uk-filter-control='[data-tags*="active"]'><a href='#'>Active</a></li>
+                        <li uk-filter-control='[data-tags*="running"]'><a href='#'>Running</a></li>
+                        <li uk-filter-control='[data-tags*="stale"]'><a href='#'>Inactive</a></li>
+                    </ul>               
+                    <ul class='js-filter uk-list uk-child-width-1-1' id='robots' uk-grid>
+                    </ul>
+                </div>
+            </div>
+            <div class='uk-width-3-4 uk-margin-top' uk-grid>
+                <div class='uk-width-1-2'>
+                    <h5 class='padding-super-small'>QUEUE</h5>
+                    <ul class='uk-list uk-child-width-1-1 uk-text-left' id='queue' uk-grid>
+                    </ul>
+                </div>
+                <div class='uk-width-1-2'>
+                    <h5 class='padding-super-small'>HISTORY</h5>
+                    <ul class='uk-list uk-child-width-1-1 uk-text-left' id='history' uk-grid>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src='static/custom.js'></script>
+</html>

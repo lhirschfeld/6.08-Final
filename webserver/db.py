@@ -30,8 +30,17 @@ jobs = sqlalchemy.Table(
     sqlalchemy.Column('mount',
                       sqlalchemy.String,
                       server_default=DEFAULT_MOUNT),
-    sqlalchemy.Column('robot', sqlalchemy.String, server_default=''),
+    sqlalchemy.Column('robot', sqlalchemy.String, server_default='')
+)
 
+activity = sqlalchemy.Table(
+    'activity',
+    metadata,
+    sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column('timestamp',
+                      sqlalchemy.DateTime,
+                      server_default=sqlalchemy.sql.func.now()),
+    sqlalchemy.Column('robot', sqlalchemy.String)
 )
 
 engine = sqlalchemy.create_engine(DATABASE_URL,
