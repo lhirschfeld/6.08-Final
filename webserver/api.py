@@ -119,10 +119,12 @@ async def read_job(job_id: int):
 
 
 @app.put('/job/{job_id}', response_model=Job)
-async def update_job(job_id: int, job_status: str, job_logs: str,
+async def update_job(job_id: int,
+                     job_status: str,
+                     job_logs: UploadFile = File(...),
                      output_zip: UploadFile = File(...)):
-
-    query = jobs.update().values(status=job_status, logs=job_logs) \
+    job_logs_string = await job_logs.read()
+    query = jobs.update().values(status=job_status, logs=job_logs_string) \
                          .where(jobs.c.id == job_id)
     await database.execute(query)
 

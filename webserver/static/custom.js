@@ -1,6 +1,7 @@
 const robots_list = document.getElementById('robots');
 const queue_list = document.getElementById('queue');
-const history_list = document.getElementById('history');
+const running_list = document.getElementById('running');
+const past_list = document.getElementById('past');
 const robot_buttons = document.getElementsByClassName('robot-button');
 
 let selected_robot = '';
@@ -16,9 +17,10 @@ const append = (parent, el) => {
 }
 
 const build_card = (job) => {
-    let li = createNode('li');
-    li.innerHTML = `
-        <div class='uk-card uk-card-default uk-card-body' uk-grid>
+    let div = createNode('div');
+    div.setAttribute('class', 'uk-card uk-card-default uk-card-body');
+    div.setAttribute('uk-grid', '');
+    div.innerHTML = `
             <dl class='uk-description-list uk-width-1-2@l'>
                 <dt>Unique ID</dt>
                 <dd>${job.id}</dd>
@@ -37,6 +39,10 @@ const build_card = (job) => {
                 <dt>Mount</dt>
                 <dd>${job.mount}/</dd>
             </dl>
+    `
+
+    if (job.status === 'finished' || job.status === 'canceled') {
+        div.innerHTML += `
             <ul class='uk-width-1-1' uk-accordion>
                 <li>
                     <a class="uk-accordion-title" href="#">Logs</a>
@@ -45,20 +51,25 @@ const build_card = (job) => {
                     </div>
                 </li>
             </ul>
-        </div>`
+        `
+    }
+
+    let li = createNode('li');
+    li.append(div);
+
     return li;
 }
 
 const build_robots = (robot, active) => {
     let running = running_robots.has(robot);
     let li = createNode('li');
-    li.setAttribute('data-tags', active ? 'active' : running ? 'running' : 'stale');
+    li.setAttribute('data-tags', running ? 'running' : active ? 'active' : 'stale');
     li.innerHTML = `
         <div class='uk-card uk-card-small uk-card-${robot === selected_robot ? 'secondary' : 'default'} uk-card-body robot-button'>
             ${robot}
             <br />
-            <span class='uk-label uk-label-${active ? 'success' : running ? 'danger' : 'warning'}'>
-                ${active ? 'Active' : running ? 'Running' : 'Inactive'}
+            <span class='uk-label uk-label-${running ? 'danger' : active ? 'success' : 'warning'}'>
+                ${running ? 'Running' : active ? 'Active' : 'Inactive'}
             </span>
         </div>
     `
@@ -91,16 +102,23 @@ const fill_history = (robot_name) => {
     fetch(`${API_HOST}/history/${robot_name}`)
     .then((resp) => resp.json())
     .then(function(jobs) {
-        history_list.innerHTML = '';
-        running_robots = new Set();
+        running_list.innerHTML = '';
+        past_list.innerHTML = '';
+
+        if (robot_name !== '') {
+            running_robots.delete(robot_name);
+        } else {
+            running_robots.clear();
+        }
         return jobs.map(function(job) {
             known_robots.add(job.robot);
 
             if (job.status === 'running') {
                 running_robots.add(job.robot);
+                append(running_list, build_card(job))
+            } else {
+                append(past_list, build_card(job));
             }
-
-            append(history_list, build_card(job));
         });
     })
     .catch(function(error) {
