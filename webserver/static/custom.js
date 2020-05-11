@@ -17,9 +17,10 @@ const append = (parent, el) => {
 }
 
 const build_card = (job) => {
-    let li = createNode('li');
-    li.innerHTML = `
-        <div class='uk-card uk-card-default uk-card-body' uk-grid>
+    let div = createNode('div');
+    div.setAttribute('class', 'uk-card uk-card-default uk-card-body');
+    div.setAttribute('uk-grid', '');
+    div.innerHTML = `
             <dl class='uk-description-list uk-width-1-2@l'>
                 <dt>Unique ID</dt>
                 <dd>${job.id}</dd>
@@ -38,6 +39,10 @@ const build_card = (job) => {
                 <dt>Mount</dt>
                 <dd>${job.mount}/</dd>
             </dl>
+    `
+
+    if (job.status === 'finished' || job.status === 'canceled') {
+        div.innerHTML += `
             <ul class='uk-width-1-1' uk-accordion>
                 <li>
                     <a class="uk-accordion-title" href="#">Logs</a>
@@ -46,7 +51,12 @@ const build_card = (job) => {
                     </div>
                 </li>
             </ul>
-        </div>`
+        `
+    }
+
+    let li = createNode('li');
+    li.append(div);
+
     return li;
 }
 
@@ -107,7 +117,7 @@ const fill_history = (robot_name) => {
                 running_robots.add(job.robot);
                 append(running_list, build_card(job))
             } else {
-                append(history_list, build_card(job));
+                append(past_list, build_card(job));
             }
         });
     })
