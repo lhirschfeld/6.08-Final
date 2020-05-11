@@ -8,7 +8,6 @@ import os
 import daemon
 from zipfile import ZipFile
 import pandas
-from pandas.io.json import json_normalize
 import json
 
 HOST_FILE = os.path.join(Path.home(),".the_hill/host.txt")
@@ -32,7 +31,7 @@ else:
                     "url_name": None}
 
 def json_print(js, hide = True):    
-    out = json_normalize(js)
+    out = pandas.json_normalize(js)
     if out.empty:
         empty = {'id': '', 
                 'timestamp': '',
@@ -42,7 +41,7 @@ def json_print(js, hide = True):
                 'mount': '',
                 'robot': '',
                 'logs': ''}
-        out = json_normalize(empty)
+        out = pandas.json_normalize(empty)
     out.set_index('id', inplace = True)
     if hide:
         out.drop(columns = ['logs'], inplace = True)

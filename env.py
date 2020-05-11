@@ -12,10 +12,12 @@ HARDWARE_FREQUENCY    = 1000/20
 SIMULATION_FREQUENCY  = 1000/10
 MAX_TIMESTEPS         = 400
 
-CART_MASS             = 1 # kg
-POLE_MASS             = 1 # kg
-POLE_LENGTH           = 1 # m
+CART_MASS             = 0.5 # kg
+POLE_MASS             = 0.05 # kg
+POLE_LENGTH           = 0.2 # m
 GRAVITY               = -9.81 # m/s^2
+
+gym.logger.set_level(40)
 
 class HillGym(gym.Env):
     def _only_hardware(f):
@@ -163,6 +165,15 @@ class HillCartpole(HillGym):
         
         self.timesteps = 0
         return self.get_observation()
+    
+    def __del__(self):
+        if self.real:
+            self.torque_mode()
+            self.command(0)
+        
+        if self.viewer is not None:
+            self.render(close=True)
+
     
     @HillGym._only_simulation
     def step_forward_dynamics(self, u):
@@ -312,12 +323,12 @@ class HillCartpole(HillGym):
         if self.trig_observations:
             return gym.spaces.Box(
                 low= np.array([-1, -np.inf,-1, -1, -np.inf]),
-                high=np.array([1,   np.inf, 1,  1,  np.inf]),
+                high=np.array([1,   np.inf, 1,  1,  np.inf])
             )
             
         return gym.spaces.Box(
-            low= np.array([-1, -np.inf, -np.inf, -np.inf]),
-            high=np.array([1,   np.inf,  np.inf,  np.inf]),
+            low= np.array([-1., -np.inf, -np.inf, -np.inf]),
+            high=np.array([1.,   np.inf,  np.inf,  np.inf])
         )
 
 

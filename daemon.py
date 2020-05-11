@@ -1,6 +1,5 @@
 import docker
 from docker.types import Mount
-
 import requests
 import time, os, shutil
 from pathlib import Path
@@ -58,12 +57,12 @@ def run_job(client, job, url):
         job = get_job(job, url)
         if job['status'] == 'cancelled':
             c.stop()
-        
+
         c.reload()
 
-    job['logs'] = c.logs(timestamps=True)
+    job['logs'] = c.logs(timestamps=True).decode("utf-8")
     c.remove()
-    
+
     return job
        
 def push_job(job, url):
@@ -78,12 +77,17 @@ def push_job(job, url):
     if job['status'] != 'cancelled':
         job['status']  = 'finished'
 
+    out_zip = open(zip_dir+'.zip', "rb")
+    
     requests.put(endpoint, params = {
         'job_id': job['id'],
-        'job_logs': job['logs'],
         'job_status': job['status']
-    }, files = {'output_zip': open(zip_dir+'.zip', "rb")})
-    
+    }, files = {
+        'output_zip': out_zip,
+        'job_logs':('log.txt', job['logs'])
+    })
+
+
 def run(robot_name, url):
     client = docker.from_env()
     
